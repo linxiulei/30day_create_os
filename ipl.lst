@@ -1,0 +1,94 @@
+     1 00000000                                 ; hello-os
+     2 00000000                                 ; TAB=4
+     3 00000000                                 
+     4 00000000                                 
+     5 00000000                                 start:
+     6                                              ORG   0X7c00
+     7 00007C00 EB 4E                               JMP   entry
+     8 00007C02 90                                  DB    0x90
+     9 00007C03                                 
+    10 00007C03 48 45 4C 4C 4F 49 50 4C         		DB		"HELLOIPL"	
+    11 00007C0B 0200                            		DW		512				
+    12 00007C0D 01                              		DB		1				
+    13 00007C0E 0001                            		DW		1				
+    14 00007C10 02                              		DB		2				
+    15 00007C11 00E0                            		DW		224				
+    16 00007C13 0B40                            		DW		2880			
+    17 00007C15 F0                              		DB		0xf0		
+    18 00007C16 0009                            		DW		9			
+    19 00007C18 0012                            		DW		18	
+    20 00007C1A 0002                            		DW		2		
+    21 00007C1C 00000000                        		DD		0	
+    22 00007C20 00000B40                        		DD		2880			
+    23 00007C24 00 00 29                        		DB		0,0,0x29
+    24 00007C27 FFFFFFFF                        		DD		0xffffffff	
+    25 00007C2B 48 45 4C 4C 4F 2D 4F 53 20 20   		DB		"HELLO-OS   "
+       00007C35 20 
+    26 00007C36 46 41 54 31 32 20 20 20         		DB		"FAT12   "	
+    27 00007C3E 00 00 00 00 00 00 00 00 00 00   		RESB	18				
+       00007C48 00 00 00 00 00 00 00 00 
+    28 00007C50                                 
+    29 00007C50                                 ; ºËÐÄ²¿·Ö
+    30 00007C50                                 
+    31 00007C50                                 entry:
+    32 00007C50 B8 0000                             MOV   AX,0
+    33 00007C53 8E D0                               MOV   SS,AX
+    34 00007C55 BC 7C00                             MOV   SP,0x7c00
+    35 00007C58 8E D8                               MOV   DS,AX
+    36 00007C5A 8E C0                               MOV   ES,AX
+    37 00007C5C                                 
+    38 00007C5C                                 readloop:
+    39 00007C5C B8 0820                             MOV		AX,0x0820
+    40 00007C5F 8E C0                           		MOV		ES,AX
+    41 00007C61 B5 00                           		MOV		CH,0		
+    42 00007C63 B6 00                           		MOV		DH,0	
+    43 00007C65 B1 02                           		MOV		CL,2
+    44 00007C67                                 
+    45 00007C67 B4 02                           		MOV		AH,0x02		
+    46 00007C69 B0 01                           		MOV		AL,1		
+    47 00007C6B BB 0000                         		MOV		BX,0
+    48 00007C6E B2 80                           		MOV		DL,0x80	
+    49 00007C70 CD 13                           		INT		0x13		
+    50 00007C72 72 12                           		JC		error
+    51 00007C74                                 
+    52 00007C74                                 next:
+    53 00007C74 8C C0                               MOV   AX,ES
+    54 00007C76 05 0020                             ADD   AX,0x0020
+    55 00007C79 8E C0                               MOV   ES,AX
+    56 00007C7B 80 C1 01                            ADD   CL,1
+    57 00007C7E 80 F9 08                            CMP   CL,8
+    58 00007C81 76 D9                               JBE   readloop
+    59 00007C83                                 
+    60 00007C83                                 fin:
+    61 00007C83 E9 057A                         		JMP		0x8200	
+    62 00007C86                                 
+    63 00007C86                                 error:
+    64 00007C86 BE 7C9B                         		MOV		SI,errmsg
+    65 00007C89                                 putloop:
+    66 00007C89 8A 04                           		MOV		AL,[SI]
+    67 00007C8B 83 C6 01                        		ADD		SI,1		
+    68 00007C8E 3C 00                           		CMP		AL,0
+    69 00007C90 74 F1                           		JE		fin
+    70 00007C92 B4 0E                           		MOV		AH,0x0e	
+    71 00007C94 BB 000F                         		MOV		BX,15		
+    72 00007C97 CD 10                           		INT		0x10		
+    73 00007C99 EB EE                           		JMP		putloop
+    74 00007C9B                                 
+    75 00007C9B                                 errmsg:
+    76 00007C9B 0A 0A                           		DB		0x0a, 0x0a		
+    77 00007C9D 65 72 72 6F 72 20 68 61 70 70   		DB		"error happen"
+       00007CA7 65 6E 
+    78 00007CA9 0A                              		DB		0x0a			
+    79 00007CAA 00                              		DB		0
+    80 00007CAB                                 
+    81 00007CAB                                 msg:
+    82 00007CAB 0A 0A                           		DB		0x0a, 0x0a		
+    83 00007CAD 68 65 6C 6C 6F 2C 20 6B 69 74   		DB		"hello, kitty~~cc"
+       00007CB7 74 79 7E 7E 63 63 
+    84 00007CBD 0A                              		DB		0x0a			
+    85 00007CBE 00                              		DB		0
+    86 00007CBF                                 
+    87 00007CBF                                 marker:
+    88 00007CBF                                     RESB	0x1fe-(marker-start)
+    89 00007CBF 55 AA                           		DB		0x55, 0xaa
+    90 00007CC1                                 
