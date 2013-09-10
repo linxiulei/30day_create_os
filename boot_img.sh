@@ -9,7 +9,8 @@ VBoxManage createvm --name 30day_os --register
 VBoxManage storagectl 30day_os --add scsi --name SCSI
 VBoxManage storageattach 30day_os --storagectl SCSI --medium hd.vdi --port 0 --type hdd
 VBoxManage startvm 30day_os
-sleep 10
+echo 'click to continue'
+read -i i
 VBoxManage controlvm 30day_os poweroff
 sleep 1
 VBoxManage unregistervm 30day_os --delete

@@ -40,7 +40,7 @@ bootpack.hrb: bootpack.bim Makefile
 	$(BIM2HRB) bootpack.bim bootpack.hrb 0
 
 daishu.bin : daishu.nas Makefile
-	nasm daishu.nas -o daishu.bin
+	$(NASK) daishu.nas daishu.bin daishu.lst
 
 daishuos.img: daishu.bin bootpack.hrb
 	cat daishu.bin bootpack.hrb > daishuos.img
@@ -51,7 +51,7 @@ daishuos.bin: ipl.bin daishuos.img
 		copy from:daishuos.img to:@: \
 		imgout:daishuos.bin
 
-bin: daishuos.bin
+bin: Makefile
 	make daishuos.bin
 
 run: daishuos.bin

@@ -9,11 +9,36 @@ SCRNX	EQU		0x0ff4
 SCRNY	EQU		0x0ff6			
 VRAM	EQU		0x0ff8			
 
-    ORG   0x8200
 
-    MOV   Al,0x13
-    MOV   AH,0x00
-    INT   0x10
+        ORG   0xc200
+        MOV   SP,0x7c00
+        MOV   AX,0
+        MOV   ES,AX
+        MOV   DS,AX
+        MOV   SS,AX
+        JMP   rror
+
+rror:
+		MOV		SI,rmsg
+utloop:
+		MOV		AL,[SI]
+		ADD		SI,1		
+		CMP		AL,0
+		JE		find
+		MOV		AH,0x0e	
+		MOV		BX,15		
+		INT		0x10		
+		JMP		utloop
+
+rmsg:
+		DB		0x0a, 0x0a		
+		DB		"error happen!"
+		DB		0x0a			
+		DB		0
+
+        MOV   Al,0x13
+        MOV   AH,0x00
+        INT   0x10
 
 ; ·Ö±æÂÊ
 		MOV		BYTE [VMODE],8	
@@ -41,7 +66,9 @@ VRAM	EQU		0x0ff8
 		OUT		0x60,AL
 		CALL	waitkbdout
 
-;[INSTRSET "i486p"]
+
+
+[INSTRSET "i486p"]
 
 		LGDT	[GDTR0]		
 		MOV		EAX,CR0
@@ -119,9 +146,9 @@ GDTR0:
 		DD		GDT0
 		ALIGNB	1
 
-fin:
+find:
     HLT
-    JMP fin
+    JMP find
 
 ;    DB    0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
 ;    RESB  4600
