@@ -11,30 +11,6 @@ VRAM	EQU		0x0ff8
 
 
         ORG   0xc200
-        MOV   SP,0x7c00
-        MOV   AX,0
-        MOV   ES,AX
-        MOV   DS,AX
-        MOV   SS,AX
-        JMP   rror
-
-rror:
-		MOV		SI,rmsg
-utloop:
-		MOV		AL,[SI]
-		ADD		SI,1		
-		CMP		AL,0
-		JE		find
-		MOV		AH,0x0e	
-		MOV		BX,15		
-		INT		0x10		
-		JMP		utloop
-
-rmsg:
-		DB		0x0a, 0x0a		
-		DB		"error happen!"
-		DB		0x0a			
-		DB		0
 
         MOV   Al,0x13
         MOV   AH,0x00
@@ -50,6 +26,8 @@ rmsg:
 		MOV		AH,0x02
 		INT		0x16 		
 		MOV		[LEDS],AL
+
+
 
 		MOV		AL,0xff
 		OUT		0x21,AL
@@ -95,14 +73,17 @@ pipelineflush:
 		MOV		ECX,512/4
 		CALL	memcpy
 
+
 		MOV		ESI,DSKCAC0+512	
 		MOV		EDI,DSKCAC+512	
 		MOV		ECX,0
 		MOV		CL,BYTE [CYLS]
-		IMUL	ECX,512*18*2/4	
+		IMUL	ECX,512*32*8/4	
 		SUB		ECX,512/4		
 		CALL	memcpy
 
+
+; bootpack
 
 		MOV		EBX,BOTPAK
 		MOV		ECX,[EBX+16]
@@ -115,6 +96,7 @@ pipelineflush:
 		CALL	memcpy
 skip:
 		MOV		ESP,[EBX+12]	
+        HLT
 		JMP		DWORD 2*8:0x0000001b
 
 waitkbdout:
@@ -146,9 +128,6 @@ GDTR0:
 		DD		GDT0
 		ALIGNB	1
 
-find:
-    HLT
-    JMP find
 
 ;    DB    0xf0, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00
 ;    RESB  4600

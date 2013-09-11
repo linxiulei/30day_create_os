@@ -1,20 +1,20 @@
      1 00000000                                 ; naskfunc
      2 00000000                                 
      3 00000000                                 [FORMAT "WCOFF"]
-     4 00000000                                 [BITS 32] 
-     5 00000000                                 [FILE "naskfunc.nas"] 
-     6 00000000                                     GLOBAL  _io_hlt 
-     7 00000000                                     GLOBAL  _write_mem8
-     8                                          [SECTION .text] 
-     9 00000000                                 _io_hlt: 
-    10 00000000 F4                                  HLT
-    11 00000001 C3                                  RET
-    12 00000002                                 
-    13 00000002                                 _write_mem8:
-    14 00000002                                     MOV   ECX,[ESP+4]
-      >> [ERROR #004] data type error.
-    15 00000002 A0 00000008                         MOV   AL,[ESP+8]
-      >> [ERROR #012] expression error.
-    16 00000007 A2 00000000                         MOV   [ECX],AL
-      >> [ERROR #012] expression error.
-    17 0000000C C3                                  RET
+     4 00000000                                 [INSTRSET "i486p"] 
+     5 00000000                                 [BITS 32] 
+     6 00000000                                 [FILE "naskfunc.nas"] 
+     7 00000000                                 
+     8 00000000                                     GLOBAL  _io_hlt,_write_mem8
+     9 00000000                                 
+    10                                          [SECTION .text] 
+    11 00000000                                 
+    12 00000000                                 _io_hlt: 
+    13 00000000 F4                                  HLT
+    14 00000001 C3                                  RET
+    15 00000002                                 
+    16 00000002                                 _write_mem8:
+    17 00000002 8B 4C 24 04                         MOV   ECX,[ESP+4]
+    18 00000006 8A 44 24 08                         MOV   AL,[ESP+8]
+    19 0000000A 88 01                               MOV   [ECX],AL
+    20 0000000C C3                                  RET

@@ -54,6 +54,10 @@ daishuos.bin: ipl.bin daishuos.img
 bin: Makefile
 	make daishuos.bin
 
+debug: daishuos.bin
+	mv  daishuos.bin bochs.img 
+	bochs -qf bochs.conf
+
 run: daishuos.bin
 	./boot_img.sh
 

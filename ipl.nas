@@ -56,12 +56,14 @@ readloop:
         ADD   CL,1
         CMP   CL,32
         JBE   readloop   ; 硬盘一个磁道上32个扇区
-        MOV   CL,0
+        MOV   CL,1
         ADD   DH,1
         CMP   DH,CYLS
         JB    readloop
 
 fin:
+        ADD   CH,1
+        MOV     [0x0ff0],CH
 		JMP		0xc200	
 
 error:
