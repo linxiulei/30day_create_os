@@ -21,12 +21,12 @@ ipl.bin: ipl.nas
 	nasm ipl.nas -o ipl.bin
 
 bootpack.gas: bootpack.c
-	$(CC!)  bootpack.c -o bootpack.gas
+	$(CC1)  bootpack.c -o bootpack.gas
 
 bootpack.nas: bootpack.gas
 	$(GAS2NASK) bootpack.gas bootpack.nas
 
-bootpack.obj: 
+bootpack.obj: bootpack.nas
 	$(NASK) bootpack.nas bootpack.obj bootpack.lst
 
 naskfunc.obj : naskfunc.nas Makefile
@@ -62,4 +62,4 @@ run: daishuos.bin
 	./boot_img.sh
 
 clean: 
-	rm -f ./*.bin
+	rm -f ./*.bin ./*.img ./*.obj bootpack.nas bootpack.gas bootpack.bim naskfunc.nas bootpack.s

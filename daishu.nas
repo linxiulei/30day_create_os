@@ -10,11 +10,10 @@ SCRNY	EQU		0x0ff6
 VRAM	EQU		0x0ff8			
 
 
-        ORG   0xc200
-
-        MOV   Al,0x13
-        MOV   AH,0x00
-        INT   0x10
+    ORG   0xc200
+    MOV   Al,0x13
+    MOV   AH,0x00
+    INT   0x10
 
 ; ·Ö±æÂÊ
 		MOV		BYTE [VMODE],8	
@@ -96,7 +95,6 @@ pipelineflush:
 		CALL	memcpy
 skip:
 		MOV		ESP,[EBX+12]	
-        HLT
 		JMP		DWORD 2*8:0x0000001b
 
 waitkbdout:
