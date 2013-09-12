@@ -62,4 +62,7 @@ run: daishuos.bin
 	./boot_img.sh
 
 clean: 
-	rm -f ./*.bin ./*.img ./*.obj bootpack.nas bootpack.gas bootpack.bim naskfunc.nas bootpack.s
+	rm -f ./*.bin ./*.img ./*.obj ./*.lst\
+		bootpack.nas bootpack.gas bootpack.bim \
+		bootpack.s bootpack.map bootpack.hrb\
+		ipl naskfunc daishu
