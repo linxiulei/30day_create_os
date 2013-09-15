@@ -1,3 +1,6 @@
+OBJS_BOOTPACK = bootpack.obj naskfunc.obj fonts.obj \
+								graphic.obj dsctbl.obj int.obj
+
 TOOLPATH = z_tools/
 INCPATH  = z_tools/haribote/
 
@@ -6,6 +9,8 @@ NASK     = $(TOOLPATH)nask.exe
 CC1      = $(TOOLPATH)cc1.exe -I$(INCPATH) -Os -Wall -quiet
 GAS2NASK = $(TOOLPATH)gas2nask.exe -a
 OBJ2BIM  = $(TOOLPATH)obj2bim.exe
+MAKEFONT = $(TOOLPATH)makefont.exe
+BIN2OBJ  = $(TOOLPATH)bin2obj.exe
 BIM2HRB  = $(TOOLPATH)bim2hrb.exe
 RULEFILE = $(TOOLPATH)haribote/haribote.rul
 EDIMG    = $(TOOLPATH)edimg.exe
@@ -20,21 +25,24 @@ IPL = ipl.bin
 ipl.bin: ipl.nas
 	nasm ipl.nas -o ipl.bin
 
-bootpack.gas: bootpack.c
-	$(CC1)  bootpack.c -o bootpack.gas
+%.gas: %.c
+	$(CC1)  $*.c -o $*.gas
 
-bootpack.nas: bootpack.gas
-	$(GAS2NASK) bootpack.gas bootpack.nas
+%.nas: %.gas
+	$(GAS2NASK) $*.gas $*.nas
 
-bootpack.obj: bootpack.nas
-	$(NASK) bootpack.nas bootpack.obj bootpack.lst
+%.obj: %.nas
+	$(NASK) $*.nas $*.obj
 
-naskfunc.obj : naskfunc.nas Makefile
-	$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
+fonts.bin : fonts.ascii Makefile
+	$(MAKEFONT) fonts.ascii fonts.bin
 
-bootpack.bim : bootpack.obj naskfunc.obj Makefile
+fonts.obj : fonts.bin Makefile
+	$(BIN2OBJ) fonts.bin fonts.obj _fonts
+
+bootpack.bim : $(OBJS_BOOTPACK)
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
-		bootpack.obj naskfunc.obj
+		$(OBJS_BOOTPACK)
 
 bootpack.hrb: bootpack.bim Makefile
 	$(BIM2HRB) bootpack.bim bootpack.hrb 0
@@ -65,4 +73,5 @@ clean:
 	rm -f ./*.bin ./*.img ./*.obj ./*.lst\
 		bootpack.nas bootpack.gas bootpack.bim \
 		bootpack.s bootpack.map bootpack.hrb\
-		ipl naskfunc daishu
+		ipl naskfunc daishu\
+		int.{nas,gas} graphic.{nas,gas} dsctbl.{nas,gas}
