@@ -1,5 +1,5 @@
 OBJS_BOOTPACK = bootpack.obj naskfunc.obj fonts.obj \
-								graphic.obj dsctbl.obj int.obj
+								graphic.obj dsctbl.obj int.obj fifo.obj
 
 TOOLPATH = z_tools/
 INCPATH  = z_tools/haribote/
@@ -69,9 +69,11 @@ debug: daishuos.bin
 run: daishuos.bin
 	./boot_img.sh
 
-clean: 
+clean:
 	rm -f ./*.bin ./*.img ./*.obj ./*.lst\
 		bootpack.nas bootpack.gas bootpack.bim \
 		bootpack.s bootpack.map bootpack.hrb\
 		ipl naskfunc daishu\
-		int.{nas,gas} graphic.{nas,gas} dsctbl.{nas,gas}
+		int.{nas,gas} graphic.{nas,gas} dsctbl.{nas,gas} fifo.{nas,gas}
+
+

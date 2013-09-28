@@ -2,7 +2,9 @@ extern void io_hlt(void);
 extern void write_mem8(int addr, int data);
 extern void io_cli(void);
 extern void io_sti(void);
+extern void io_stihlt(void);
 extern void io_out8(int port, int data);
+extern unsigned char io_in8(int port);
 extern int io_load_eflags(void);
 extern int io_store_eflags(int eflags);
 extern void load_gdtr(int limit, int addr);
@@ -68,6 +70,9 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define AR_CODE32_ER	0x409a
 #define AR_INTGATE32	0x008e
 
+struct KEYBUF {
+    unsigned char flag, data;
+};
 
 void init_pic(void);
 void inthandler21(int *esp);
@@ -85,3 +90,19 @@ void inthandler2c(int *esp);
 #define PIC1_ICW2		0x00a1
 #define PIC1_ICW3		0x00a1
 #define PIC1_ICW4		0x00a1
+
+struct FIFO8 {
+    unsigned char *buf;
+    int p, q, size, free, flags;
+};
+void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);
+int fifo8_put(struct FIFO8 *fifo, unsigned char data);
+unsigned char fifo8_get(struct FIFO8 *fifo);
+int fifo8_status(struct FIFO8 *fifo);
+
+
+void init_keyboard(void);
+void enable_mouse(void);
+void putblock8_8(char *vram, int vxsize, int pxsize,
+	int pysize, int px0, int py0, char *buf, int bxsize);
+void init_mouse_cursor8(char *mouse, char bc);
