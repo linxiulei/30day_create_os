@@ -31,6 +31,10 @@ void HariMain(void)
     init_mouse_cursor8(mcursor, COL8_008484);
     putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
 
+    enable_mouse();
+
+	boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 16, 0, 32 * 8 - 1, 15);
+	putfonts8_asc(binfo->vram, binfo->scrnx, 16, 0, COL8_FFFFFF, "INT 2C (IRQ-12) : PS/2 mouse");
 
     for (;;) {
         io_cli();
@@ -50,7 +54,7 @@ void HariMain(void)
 
 #define PORT_KEYDAT              0x0060
 #define PORT_KEYSTA              0x0064
-#define PORT_KEYCMD              0x0060
+#define PORT_KEYCMD              0x0064
 #define KEYSTA_SEND_NOTREADY     0x02
 #define KEYCMD_WRITE_MODE        0x0060
 #define KBC_MODE                 0x47
@@ -76,6 +80,7 @@ void init_keyboard(void)
 
 #define KEYCMD_SENDTO_MOUSE         0xd4
 #define MOUSECMD_ENABLE             0xf4
+
 void enable_mouse(void)
 {
     wait_KBC_sendready();
