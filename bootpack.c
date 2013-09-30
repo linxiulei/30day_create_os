@@ -2,11 +2,12 @@
 #include "bootpack.h"
 
 extern struct FIFO8 keyfifo;
+extern struct FIFO8 mousefifo;
 
 void HariMain(void)
 {
-    char s[40], mcursor[256], keybuf[32];
-    unsigned char data;
+    char s[40], mcursor[256], keybuf[32], mousebuf[256];
+    unsigned char data, mouse_dbuf[3], mouse_phase;
     struct BOOTINFO *binfo;
     int mx, my;
 
@@ -17,6 +18,8 @@ void HariMain(void)
     io_sti();
 
     fifo8_init(&keyfifo, 32, keybuf);
+    fifo8_init(&mousefifo, 256, mousebuf);
+
     init_palette();
     init_screen8(binfo->vram, binfo->scrnx, binfo->scrny);
 
@@ -32,22 +35,51 @@ void HariMain(void)
     putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
 
     enable_mouse();
+    mouse_phase = 0;
 
-	boxfill8(binfo->vram, binfo->scrnx, COL8_000000, 16, 0, 32 * 8 - 1, 15);
-	putfonts8_asc(binfo->vram, binfo->scrnx, 16, 0, COL8_FFFFFF, "INT 2C (IRQ-12) : PS/2 mouse");
 
     for (;;) {
         io_cli();
-        if (fifo8_status(&keyfifo) == 0) {
+        if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0 ) {
             io_stihlt();
         } else {
-            data = fifo8_get(&keyfifo);
-            io_sti();
+            if (fifo8_status(&keyfifo) != 0)
+            {
+                data = fifo8_get(&keyfifo);
+                io_sti();
 
-            sprintf(s, "%02X", data);
+                sprintf(s, "%02X", data);
 
-	        boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15 + 64, 31);
-	        putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+	            boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
+	            putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+            } else if (fifo8_status(&mousefifo) != 0)
+            {
+                data = fifo8_get(&mousefifo);
+                if (mouse_phase == 0) 
+                {
+                    if (data == 0xfa)
+                     {
+                         mouse_phase = 1;
+                     }
+                } else if (mouse_phase == 1)
+                {
+                    mouse_dbuf[0] = data;
+                    mouse_phase = 2;
+                } else if (mouse_phase == 2)
+                {
+                    mouse_dbuf[1] = data;
+                    mouse_phase = 3;
+                } else if (mouse_phase == 3)
+                {
+                    mouse_dbuf[2] = data;
+                    mouse_phase = 1;
+
+                    sprintf(s, "%02X %02X %02X", mouse_dbuf[0], mouse_dbuf[1], mouse_dbuf[2]);
+
+	                boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32 + 8 * 8 - 1, 31);
+	                putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
+                }
+            }
         }
     }
 }
