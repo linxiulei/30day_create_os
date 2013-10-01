@@ -4,10 +4,19 @@
 extern struct FIFO8 keyfifo;
 extern struct FIFO8 mousefifo;
 
+struct MOUSE_DEC {
+    unsigned char buf[3], phase;
+    int x, y, btn;
+};
+
+void enable_mouse(struct MOUSE_DEC *mdec);
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
+
 void HariMain(void)
 {
     char s[40], mcursor[256], keybuf[32], mousebuf[256];
     unsigned char data, mouse_dbuf[3], mouse_phase;
+    struct MOUSE_DEC mdec;
     struct BOOTINFO *binfo;
     int mx, my;
 
@@ -34,8 +43,8 @@ void HariMain(void)
     init_mouse_cursor8(mcursor, COL8_008484);
     putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
 
-    enable_mouse();
-    mouse_phase = 0;
+    enable_mouse(&mdec);
+mouse_phase=0;
 
 
     for (;;) {
@@ -55,29 +64,14 @@ void HariMain(void)
             } else if (fifo8_status(&mousefifo) != 0)
             {
                 data = fifo8_get(&mousefifo);
-                if (mouse_phase == 0) 
-                {
-                    if (data == 0xfa)
-                     {
-                         mouse_phase = 1;
-                     }
-                } else if (mouse_phase == 1)
-                {
-                    mouse_dbuf[0] = data;
-                    mouse_phase = 2;
-                } else if (mouse_phase == 2)
-                {
-                    mouse_dbuf[1] = data;
-                    mouse_phase = 3;
-                } else if (mouse_phase == 3)
-                {
-                    mouse_dbuf[2] = data;
-                    mouse_phase = 1;
+                io_sti();
 
-                    sprintf(s, "%02X %02X %02X", mouse_dbuf[0], mouse_dbuf[1], mouse_dbuf[2]);
 
-	                boxfill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16, 32 + 8 * 8 - 1, 31);
-	                putfonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
+                if (mouse_decode(&mdec, data) == 1)
+                {
+                    mx += mdec.x;
+                    my += mdec.y;
+                    putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
                 }
             }
         }
@@ -113,14 +107,59 @@ void init_keyboard(void)
 #define KEYCMD_SENDTO_MOUSE         0xd4
 #define MOUSECMD_ENABLE             0xf4
 
-void enable_mouse(void)
+void enable_mouse(struct MOUSE_DEC *mdec)
 {
     wait_KBC_sendready();
     io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
     wait_KBC_sendready();
     io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
+    mdec->phase = 0;
     return;
 }
 
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat)
+{
+    if (mdec->phase == 0) 
+    {
+        if (dat == 0xfa)
+        {
+            mdec->phase = 1;
+        }
+        return 0;
+    } else if (mdec->phase == 1)
+    {
+        if ((dat & 0xc8) == 0x08)
+        {
+            mdec->buf[0] = dat;
+            mdec->phase = 2;
+        }
+        return 0;
+    } else if (mdec->phase == 2)
+    {
+        mdec->buf[1] = dat;
+        mdec->phase = 3;
+        return 0;
+    } else if (mdec->phase == 3)
+    {
+        mdec->buf[2] = dat;
+        mdec->phase = 1;
+        mdec->btn = mdec->buf[0] & 0x07;
+        mdec->x = mdec->buf[1];
+        mdec->y = mdec->buf[2];
+
+        if ((mdec->buf[0] & 0x10) != 0) 
+        {
+            mdec->x != 0xffffff00;
+        }
+        if ((mdec->buf[1] & 0x20) != 0) 
+        {
+            mdec->y != 0xffffff00;
+        }
+        mdec->y = - mdec->y;
+
+        return 1;
+    }
+    return -1;
+}
 
 // vim:ts=4

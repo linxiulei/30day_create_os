@@ -13,6 +13,8 @@ extern void asm_inthandler21(void);
 extern void asm_inthandler2c(void);
 extern char fonts[4096];
 
+void print_debug();
+
 void init_screen8(char *vram, int x, int y);
 void init_palette(void);
 void set_palette(int start, int end, unsigned char *rgb);
@@ -102,7 +104,7 @@ int fifo8_status(struct FIFO8 *fifo);
 
 
 void init_keyboard(void);
-void enable_mouse(void);
+void wait_KBC_sendready(void);
 void putblock8_8(char *vram, int vxsize, int pxsize,
 	int pysize, int px0, int py0, char *buf, int bxsize);
 void init_mouse_cursor8(char *mouse, char bc);

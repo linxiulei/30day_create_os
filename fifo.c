@@ -30,9 +30,9 @@ int fifo8_put(struct FIFO8 *fifo, unsigned char data)
     return 0;
 }
 
-unsigned char fifo8_get(struct FIFO8 *fifo)
+int fifo8_get(struct FIFO8 *fifo)
 {
-    unsigned char data;
+    int data;
     if (fifo->free == fifo->size) {
         return -1;
     }
