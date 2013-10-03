@@ -4,21 +4,15 @@
 extern struct FIFO8 keyfifo;
 extern struct FIFO8 mousefifo;
 
-struct MOUSE_DEC {
-    unsigned char buf[3], phase;
-    int x, y, btn;
-};
-
-void enable_mouse(struct MOUSE_DEC *mdec);
-int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat);
+unsigned int memtest(unsigned int start, unsigned int end);
 
 void HariMain(void)
 {
     char s[40], mcursor[256], keybuf[32], mousebuf[256];
-    unsigned char data, mouse_dbuf[3], mouse_phase;
     struct MOUSE_DEC mdec;
     struct BOOTINFO *binfo;
-    int mx, my;
+    int mx, my, data;
+    unsigned int i;
 
     binfo = (struct BOOTINFO *) 0xff0;
 
@@ -44,8 +38,12 @@ void HariMain(void)
     putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
 
     enable_mouse(&mdec);
-mouse_phase=0;
 
+
+    i = memtest(0x400000, 0xbfffffff) / (1024 * 1024);
+    sprintf(s, "memory %dMB", i);
+
+	putfonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
 
     for (;;) {
         io_cli();
@@ -66,11 +64,29 @@ mouse_phase=0;
                 data = fifo8_get(&mousefifo);
                 io_sti();
 
-
                 if (mouse_decode(&mdec, data) == 1)
                 {
+                    boxfill8(binfo->vram, binfo->scrnx, COL8_008484, mx, my, mx + 15, my + 15);
                     mx += mdec.x;
                     my += mdec.y;
+                    if (mx < 0)
+                    {
+                        mx = 0;
+                    }
+                    if (my < 0)
+                    {
+                        my = 0;
+                    }
+                    if (mx > binfo->scrnx - 16)
+                    {
+                        mx = binfo->scrnx - 16;
+                    }
+                    if (my > binfo->scrny - 16)
+                    {
+                        my = binfo->scrny - 16;
+                    }
+                    sprintf(s, "(%3d, %3d)", mx, my);
+                    print_debug(s);
                     putblock8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
                 }
             }
@@ -78,88 +94,37 @@ mouse_phase=0;
     }
 }
 
-#define PORT_KEYDAT              0x0060
-#define PORT_KEYSTA              0x0064
-#define PORT_KEYCMD              0x0064
-#define KEYSTA_SEND_NOTREADY     0x02
-#define KEYCMD_WRITE_MODE        0x0060
-#define KBC_MODE                 0x47
-
-void wait_KBC_sendready(void)
+#define EFLAGS_AC_BIT		0x00040000
+#define CR0_CACHE_DISABLE	0x60000000
+unsigned int memtest(unsigned int start, unsigned int end)
 {
-    for (;;) {
-        if ((io_in8(PORT_KEYSTA) & KEYSTA_SEND_NOTREADY) == 0) {
-            break;
-        }
-    }
-    return;
+	char flg486 = 0;
+	unsigned int eflg, cr0, i;
+
+	eflg = io_load_eflags();
+	eflg |= EFLAGS_AC_BIT; /* AC-bit = 1 */
+	io_store_eflags(eflg);
+	eflg = io_load_eflags();
+	if ((eflg & EFLAGS_AC_BIT) != 0) { 
+		flg486 = 1;
+	}
+	eflg &= ~EFLAGS_AC_BIT; /* AC-bit = 0 */
+	io_store_eflags(eflg);
+
+	if (flg486 != 0) {
+		cr0 = load_cr0();
+		cr0 |= CR0_CACHE_DISABLE; 
+		store_cr0(cr0);
+	}
+
+	i = memtest_sub(start, end);
+
+	if (flg486 != 0) {
+		cr0 = load_cr0();
+		cr0 &= ~CR0_CACHE_DISABLE; 
+		store_cr0(cr0);
+	}
+
+	return i;
 }
-
-void init_keyboard(void)
-{
-    wait_KBC_sendready();
-    io_out8(PORT_KEYCMD, KEYCMD_WRITE_MODE);
-    wait_KBC_sendready();
-    io_out8(PORT_KEYDAT, KBC_MODE);
-    return;
-}
-
-#define KEYCMD_SENDTO_MOUSE         0xd4
-#define MOUSECMD_ENABLE             0xf4
-
-void enable_mouse(struct MOUSE_DEC *mdec)
-{
-    wait_KBC_sendready();
-    io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
-    wait_KBC_sendready();
-    io_out8(PORT_KEYDAT, MOUSECMD_ENABLE);
-    mdec->phase = 0;
-    return;
-}
-
-int mouse_decode(struct MOUSE_DEC *mdec, unsigned char dat)
-{
-    if (mdec->phase == 0) 
-    {
-        if (dat == 0xfa)
-        {
-            mdec->phase = 1;
-        }
-        return 0;
-    } else if (mdec->phase == 1)
-    {
-        if ((dat & 0xc8) == 0x08)
-        {
-            mdec->buf[0] = dat;
-            mdec->phase = 2;
-        }
-        return 0;
-    } else if (mdec->phase == 2)
-    {
-        mdec->buf[1] = dat;
-        mdec->phase = 3;
-        return 0;
-    } else if (mdec->phase == 3)
-    {
-        mdec->buf[2] = dat;
-        mdec->phase = 1;
-        mdec->btn = mdec->buf[0] & 0x07;
-        mdec->x = mdec->buf[1];
-        mdec->y = mdec->buf[2];
-
-        if ((mdec->buf[0] & 0x10) != 0) 
-        {
-            mdec->x != 0xffffff00;
-        }
-        if ((mdec->buf[1] & 0x20) != 0) 
-        {
-            mdec->y != 0xffffff00;
-        }
-        mdec->y = - mdec->y;
-
-        return 1;
-    }
-    return -1;
-}
-
 // vim:ts=4

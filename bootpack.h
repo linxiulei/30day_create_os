@@ -9,6 +9,9 @@ extern int io_load_eflags(void);
 extern int io_store_eflags(int eflags);
 extern void load_gdtr(int limit, int addr);
 extern void load_idtr(int limit, int addr);
+extern unsigned int memtest_sub(unsigned int start, unsigned int end);
+extern int load_cr0();
+extern void store_cr0(int cr0);
 extern void asm_inthandler21(void);
 extern void asm_inthandler2c(void);
 extern char fonts[4096];
@@ -108,3 +111,20 @@ void wait_KBC_sendready(void);
 void putblock8_8(char *vram, int vxsize, int pxsize,
 	int pysize, int px0, int py0, char *buf, int bxsize);
 void init_mouse_cursor8(char *mouse, char bc);
+
+#define PORT_KEYDAT              0x0060
+#define PORT_KEYSTA              0x0064
+#define PORT_KEYCMD              0x0064
+#define KEYSTA_SEND_NOTREADY     0x02
+#define KEYCMD_WRITE_MODE        0x0060
+#define KBC_MODE                 0x47
+#define PORT_KEYDAT     0x0060
+#define KEYCMD_SENDTO_MOUSE         0xd4
+#define MOUSECMD_ENABLE             0xf4
+
+struct MOUSE_DEC {
+    unsigned char buf[3], phase;
+    int x, y, btn;
+};
+void enable_mouse(struct MOUSE_DEC *mdec);
+int mouse_decode(struct MOUSE_DEC *mdec, unsigned char data);
