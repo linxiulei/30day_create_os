@@ -1,7 +1,8 @@
 OBJS_BOOTPACK = bootpack.obj naskfunc.obj fonts.obj \
 								graphic.obj dsctbl.obj int.obj \
 								fifo.obj debug.obj mouse.obj\
-								keyboard.obj
+								keyboard.obj memory.obj sheet.obj\
+								timer.obj
 
 TOOLPATH = z_tools/
 INCPATH  = z_tools/haribote/
@@ -78,6 +79,7 @@ clean:
 		ipl naskfunc daishu\
 		int.{nas,gas} graphic.{nas,gas} dsctbl.{nas,gas}\
 		fifo.{nas,gas} debug.{nas,gas} \
-		mouse.{nas,gas} keyboard.{nas,gas}
+		mouse.{nas,gas} keyboard.{nas,gas}\
+		memory.{nas,gas} sheet.{nas,gas} timer.{nas.gas}
 
 

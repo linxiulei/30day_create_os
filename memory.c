@@ -76,6 +76,21 @@ unsigned int memman_alloc(struct MEMMAN *memman, unsigned int size)
     return 0;
 }
 
+unsigned int memman_alloc_4k(struct MEMMAN *memman, unsigned int size)
+{
+    int a;
+    size = (size + 0xfff) & 0xfffff000;
+    a = memman_alloc(memman, size);
+    return a;
+}
+
+int memman_free_4k(struct MEMMAN *memman, unsigned int addr, unsigned int size)
+{
+    int i;
+    size = (size + 0xfff) && 0xfffff000;
+    i = memman_free(memman, addr, size);
+    return i;
+}
 
 int memman_free(struct MEMMAN *man, unsigned int addr, unsigned int size)
 {
